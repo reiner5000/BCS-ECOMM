@@ -7,7 +7,7 @@
 
 <body>
     @include('layouts.header')
-    
+
 
 
     <div class="resp-page-section left-flex no-first checkout-page" style="margin-bottom: 80px;">
@@ -63,11 +63,14 @@
                         $totalMaster = 0;
                         $totalCompetition = 0;
                         $productCompetition = 0;
+                        $softCopyFound = false; 
+                        $initialShippingCost = $shippingCost;
                     @endphp
                     @foreach ($cartItems as $cartItem)
                         @php
                             $subtotal = $cartItem->harga * $cartItem->total_quantity;
                             $totalMaster += $subtotal;
+ 
                         @endphp
                         <div class="cart-detail">
                             <div class="cart-detail-img">
@@ -106,6 +109,21 @@
                 <form action="{{ route('checkout.pay') }}" method="POST">
                     @csrf
                     @foreach ($cartItems as $cartItem)
+                    
+                        @php
+                            // Jika file_type adalah "soft_copy", atur shippingCost menjadi 0
+                            if ($cartItem->file_type == "softcopy") {
+                                $softCopyFound = true;
+                                $shippingCost = 0;
+                            }
+                
+                            // Jika ada item "hard_copy" dan ada item "soft_copy", kembalikan shippingCost ke nilai semula
+                            if ($cartItem->file_type == "hardcopy" && $softCopyFound) {
+                                $shippingCost = $initialShippingCost;
+                            }
+                        @endphp
+                        
+                        
                         {{-- @dd($cartItem); --}}
                         <input type="hidden" name="size[]" value="{{ $cartItem->size }}">
                         <input type="hidden" name="color[]" value="{{ $cartItem->color }}">
