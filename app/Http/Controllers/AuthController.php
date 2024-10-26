@@ -25,27 +25,61 @@ class AuthController extends Controller
     }
 
     public function authenticateLogin(Request $request)
-    {
-       // validate email dan password
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+{
+    // Validate email and password
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
 
-        // jika sukses login
+    // Attempt to log in with the first database
+    if (Auth::guard('customer')->attempt($credentials)) {
+        // Redirect to homepage if login is successful
+        $request->session()->regenerate();
+        return redirect()->route('homepage');
+    }
+
+    // Initialize secondDbUser to null
+    $secondDbUser = null;
+
+    // Check the second database for the user
+    try {
+        $secondDbUser = \DB::connection('mysql_second')
+            ->table('users')
+            ->where('email', $credentials['email'])
+            ->first();
+    } catch (\Exception $e) {
+        // Handle any connection errors
+        return back()->withErrors(['error' => 'Database connection error.']);
+    }
+
+    // Check if the user exists in the second database
+    if ($secondDbUser && $secondDbUser->password === $credentials['password']) {
+        // Check if the user already exists in the customers table
+        $customerExists = \DB::connection('mysql')->table('customer')->where('email', $secondDbUser->email)->exists();
+
+        // If user does not exist in customers table, create a new customer
+        if (!$customerExists) {
+            $newCustomer = new \App\Models\Customer(); // Replace with your actual Customer model
+            $newCustomer->name = $secondDbUser->name; // Adjust the fields as needed
+            $newCustomer->email = $secondDbUser->email;
+            $newCustomer->password = bcrypt($credentials['password']); // Store password securely
+            $newCustomer->save();
+        }
+
+        // Attempt to log in using the customer guard
         if (Auth::guard('customer')->attempt($credentials)) {
-            $user = Auth::guard('customer')->user();
-
-            // redirect ke beranda
+            // Redirect to homepage if login is successful
             $request->session()->regenerate();
             return redirect()->route('homepage');
         }
-
-        // jika gagal login
-        return back()->withErrors([
-            'error' => 'Email atau password salah',
-        ]);
     }
+
+    // If all login attempts fail
+    return back()->withErrors([
+        'error' => 'Email atau password salah',
+    ]);
+}
 
 
     public function register()
@@ -166,6 +200,20 @@ class AuthController extends Controller
         $customer->password = Hash::make($request->password);
         $customer->save();
 
+
+        $secondDbUser = \DB::connection('mysql_second')
+        ->table('users')
+        ->where('email', $customer->email)
+        ->first();
+
+    // If the user exists in the second database, update the password
+        if ($secondDbUser) {
+            \DB::connection('mysql_second')
+                ->table('users')
+                ->where('email', $customer->email)
+                ->update(['password' => $request->password]); // No hashing since it's plain text
+    }
+    // Update last used timestamp for the token
         $pac->last_used_at = Carbon::now();
         $pac->save();
 

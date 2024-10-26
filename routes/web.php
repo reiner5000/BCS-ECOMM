@@ -35,6 +35,12 @@ use App\Imports\MerchandiseImport;
 // for import excel
 use Maatwebsite\Excel\Facades\Excel;
 
+
+// for second db
+
+use Illuminate\Support\Facades\DB;
+
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -45,6 +51,26 @@ use Maatwebsite\Excel\Facades\Excel;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+
+Route::get('/test-second-db', function () {
+    try {
+        // Attempt to fetch some data from a table in your second database
+        $data = DB::connection('mysql_second')->table('users')->first();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    } catch (\Exception $e) {
+        // Return an error message if the connection fails
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to connect to the second database',
+            'error' => $e->getMessage(),
+        ]);
+    }
+});
 
 // Homepage
 Route::get('/', [HomepageController::class, 'index'])->name('homepage');
