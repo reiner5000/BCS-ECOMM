@@ -455,7 +455,7 @@ body{
 }
 
 #terbaru .section-row{
-    width: 94%;
+    width: 100%;
     column-gap: 30px !important;
     justify-content: space-between !important;
 }
@@ -2400,8 +2400,58 @@ table.prod-showcase tbody tr:not(:last-child) td{
         position: fixed;
     }
 }
-
+@media screen and (min-width: 1199px) {
+    .owl-prev, .owl-next{
+        font-size: 32px !important;
+    }
+    .cart-detail-title{
+        max-width: 100% !important;
+        overflow: auto !important;;
+    }
+}
 @media screen and (max-width: 1200px) {
+    .cart-detail-title{
+        max-width: 50vw !important;
+        overflow: auto !important;;
+    }
+    .owl-prev{
+        left: 0px !important;
+        margin-left: 0px !important;
+        font-size: 15px !important;
+    }
+    .owl-next{
+        right: 0px !important;
+        margin-right: 0px !important;
+        font-size: 15px !important;
+    }
+    
+    #terbaru .section-row{
+        width: 50%;
+        min-width: 420px;
+        column-gap: 0px !important;
+        justify-content: space-between !important;
+    }
+    
+    .home-carousel, .prod-img-list {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .home-carousel,
+    .prod-img-list {
+        width: 100%;
+    }
+    
+    .home-carousel img,
+    .prod-img-list img {
+        width: 100%;
+        height: auto; /* Memastikan gambar tidak terpotong vertikal */
+        object-fit: cover; /* Mengatur gambar untuk mengisi area dan tetap fokus di tengah */
+    }
+    
+    .img-home{
+        width: 100%;
+    }
     .mobile-alamat-title{
         display: flex;
         justify-content: space-between;
@@ -2442,18 +2492,18 @@ table.prod-showcase tbody tr:not(:last-child) td{
         height: auto;
     }
 
-    .carousel-item{
-        width: 100%;
-        height: auto;
-        aspect-ratio: 297/210 !important;
-        overflow: hidden;
-    }
+    /*.carousel-item{*/
+    /*    width: 100%;*/
+    /*    height: auto;*/
+    /*    aspect-ratio: 297/210 !important;*/
+    /*    overflow: hidden;*/
+    /*}*/
 
-    .carousel-item img{
-        width: 100%;
-        height: auto;
-        aspect-ratio: 297/210 !important;
-    }
+    /*.carousel-item img{*/
+    /*    width: 100%;*/
+    /*    height: auto;*/
+    /*    aspect-ratio: 297/210 !important;*/
+    /*}*/
 
     .section-sub{
         width: 90vw;
@@ -3139,7 +3189,7 @@ input[type=number] {
     background-color: transparent;
     border: none !important;
     width: 42px !important;
-    font-size: 32px !important;
+    font-size: 32px;
     aspect-ratio: 1/1;
     color: #fff !important;
     display: flex;

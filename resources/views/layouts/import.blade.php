@@ -1,6 +1,6 @@
 
 <!-- STYLESHEET -->
-<link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/styles.css?v2') }}">
 
 <!-- GOOGLE FONTS IMPORTS -->
 <link rel="preconnect" href="https://fonts.googleapis.com">

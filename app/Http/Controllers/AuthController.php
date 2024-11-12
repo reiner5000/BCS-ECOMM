@@ -114,8 +114,18 @@ class AuthController extends Controller
                     
                     // Save the customer (customer)
                     $customer->save();
-        
-                    DB::commit();
+
+                    // Connect to the secondary database and create the user there
+                \DB::connection('mysql_second')->table('users')->insert([
+                    'name' => $validatedData['nama'],
+                    'email' => $validatedData['email'],
+                    'password' => $validatedData['password'], // Plain text, as you mentioned passwords are not hashed here
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Commit the transaction if both saves are successful
+                DB::commit();
         
                     $credentials = $request->validate([
                         'email' => ['required'],
@@ -213,7 +223,7 @@ class AuthController extends Controller
                 ->where('email', $customer->email)
                 ->update(['password' => $request->password]); // No hashing since it's plain text
     }
-    // Update last used timestamp for the token
+    // cek penggunaan terakhir token
         $pac->last_used_at = Carbon::now();
         $pac->save();
 

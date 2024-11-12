@@ -151,43 +151,79 @@
             }
         });
 
-        function changeQuantity(event, isIncrement) {
+        // function changeQuantity(event, isIncrement) {
+        //     const qtyGroup = event.target.closest('.qty-group');
+        //     if (qtyGroup) {
+        //         const input = qtyGroup.querySelector('input[type="number"]');
+        //         const setok = qtyGroup.querySelector('input[type="hidden"]');
+        //         const currentValue = parseInt(input.value, 10);
+        //         let valnext = isIncrement ? currentValue + 1 : Math.max(0, currentValue - 1);
+                
+        //         const cartDetailVoicetype = qtyGroup.closest('.cart-detail').querySelector('.cart-detail-voicetype').textContent.toLowerCase();
+        //         const isSoftcopy = cartDetailVoicetype.includes('softcopy');
+        //         const isHardcopy = cartDetailVoicetype.includes('hardcopy');
+
+        //         if (isSoftcopy || isHardcopy) {
+        //             // Increment atau decrement tanpa memeriksa stok untuk softcopy dan hardcopy
+        //             if (isIncrement) {
+        //                 input.value = valnext;
+        //             } else {
+        //                 if (valnext >= 1) {
+        //                     input.value = valnext;
+        //                 }
+        //             }
+        //         } else {
+        //             // Increment atau decrement dengan memeriksa stok untuk selain softcopy dan hardcopy
+        //             if (!isIncrement) {
+        //                 if (valnext >= 1) {
+        //                     input.value = valnext;
+        //                 }
+        //             } else {
+        //                 if (valnext <= parseInt(setok.value, 10)) {
+        //                     input.value = valnext;
+        //                 }
+        //             }
+        //         }
+
+        //         calculateAndUpdateSubtotal();
+        //     }
+        // }
+        
+         function changeQuantity(event, isIncrement) {
             const qtyGroup = event.target.closest('.qty-group');
             if (qtyGroup) {
                 const input = qtyGroup.querySelector('input[type="number"]');
                 const setok = qtyGroup.querySelector('input[type="hidden"]');
-                const currentValue = parseInt(input.value, 10);
-                let valnext = isIncrement ? currentValue + 1 : Math.max(0, currentValue - 1);
-                
+                const currentValue = parseInt(input.value, 10) || {{ $item->minimum_order ?? 20 }}; // Default ke 20 jika input tidak valid
+                let valnext = isIncrement ? currentValue + 1 : Math.max({{ $item->minimum_order ?? 20 }}, currentValue - 1); // Batasi minimum 20
+        
                 const cartDetailVoicetype = qtyGroup.closest('.cart-detail').querySelector('.cart-detail-voicetype').textContent.toLowerCase();
                 const isSoftcopy = cartDetailVoicetype.includes('softcopy');
                 const isHardcopy = cartDetailVoicetype.includes('hardcopy');
-
+        
                 if (isSoftcopy || isHardcopy) {
                     // Increment atau decrement tanpa memeriksa stok untuk softcopy dan hardcopy
-                    if (isIncrement) {
-                        input.value = valnext;
-                    } else {
-                        if (valnext >= 1) {
-                            input.value = valnext;
-                        }
-                    }
+                    input.value = valnext;
                 } else {
                     // Increment atau decrement dengan memeriksa stok untuk selain softcopy dan hardcopy
-                    if (!isIncrement) {
-                        if (valnext >= 1) {
-                            input.value = valnext;
-                        }
-                    } else {
+                    if (isIncrement) {
                         if (valnext <= parseInt(setok.value, 10)) {
                             input.value = valnext;
                         }
+                    } else {
+                        input.value = valnext;
                     }
                 }
-
+        
+                // Set nilai minimal ke 20 jika di bawah 20
+                if (parseInt(input.value, 10) < {{ $item->minimum_order ?? 20 }}) {
+                    input.value = {{ $item->minimum_order ?? 20 }};
+                }
+                
                 calculateAndUpdateSubtotal();
             }
         }
+
 
 
         const fetchCartData = () => {
@@ -243,7 +279,7 @@
                             <div class="qty-group">
                                 <button class="btn-min">-</button>
                                 <input type="hidden" id="stock-7" name="stock[]" value="${item.stok}" />
-                                <input type="number" id="det-7" name="qty[]" value="${item.total_quantity}" readonly />
+                                <input type="number" id="det-7" name="qty[]" value="${item.total_quantity}" min="{{ $item->minimum_order ?? 20 }}" />
                                 <button class="btn-plus">+</button>
                             </div>
                             <div class="qty-hint">&nbsp;</div>
@@ -294,7 +330,9 @@
                         const type = this.closest('.cart-detail').querySelector('input[name="type[]"]').value;
                         const closestStok = this.closest('.cart-detail').querySelector('input[name="stock[]"]').value;
                         let newQty = closestInput;
+                        if(newQty>{{ $item->minimum_order ?? 20 }}){
                         updateCartItem(cartId, type, { quantitymin: newQty,stok :closestStok}); 
+                        }
                     });
                 });
 
@@ -308,9 +346,27 @@
                         updateCartItem(cartId, type, { quantityplus: newQty, stok :closestStok}); 
                     });
                 });
+                
+                
+                
+                const inputNumber = cartDetail.querySelector('input[name="qty[]"]');
 
-                const inputNumber = cartDetail.querySelector('input[type="number"]');
-                inputNumber.addEventListener('change', calculateAndUpdateSubtotal);
+                // Tambahkan event listener untuk input keyboard agar tidak bisa kurang dari 20
+                inputNumber.addEventListener('change', function() {
+                        const cartId = this.closest('.cart-detail').querySelector('input[name="idCart[]"]').value;
+                        const closestInput = this.closest('.cart-detail').querySelector('input[name="qty[]"]').value;
+                        const type = this.closest('.cart-detail').querySelector('input[name="type[]"]').value;
+                        const closestStok = this.closest('.cart-detail').querySelector('input[name="stock[]"]').value;
+                        let newQty = closestInput;
+                        if(newQty>{{ $item->minimum_order ?? 20 }}){
+                            updateCartItem(cartId, type, { quantity: newQty, stok :closestStok }); 
+                        }else{
+                            let newQty = {{ $item->minimum_order ?? 20 }};
+                            this.value = {{ $item->minimum_order ?? 20 }};
+                            updateCartItem(cartId, type, { quantity: newQty, stok :closestStok }); 
+                        }
+                        calculateAndUpdateSubtotal();
+                });
 
             });
 

@@ -682,6 +682,7 @@ class CheckoutController extends Controller
         'quantityplus' => 'sometimes|integer|min:1',
         'type' => 'required|string',
         'stok' => 'required|integer',
+        'quantity' => 'sometimes|integer|min:1'
     ]);
 
     // Ambil item keranjang berdasarkan ID dan customer
@@ -708,13 +709,20 @@ class CheckoutController extends Controller
         if ($request->type == 'merchandise' && $request->has('quantityplus') && $cart->qty + 1 > $request->stok - 1) {
             return response()->json(['message' => 'Quantity cannot exceed stock.'], 400);
         }
-
         if ($request->has('quantitymin')) {
             $cart->qty--;
         }
         if ($request->has('quantityplus')) {
             $cart->qty++;
         }
+        $cart->save();
+    }
+    
+    if ($request->has('quantity')) {
+        if ($request->type == 'merchandise' && $cart->qty + 1 > $request->stok - 1) {
+            return response()->json(['message' => 'Quantity cannot exceed stock.'], 400);
+        }
+        $cart->qty = $request->quantity; // Update quantity dari input
         $cart->save();
     }
 

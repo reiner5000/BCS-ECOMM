@@ -586,7 +586,7 @@
                 '<span class="fa-solid fa-circle-chevron-right"></span>'
             ],
             navClass: ['owl-prev', 'owl-next'],
-            autoplay: true,
+            autoplay: false,
             autoplayTimeout: 3000
         });
 

@@ -14,7 +14,7 @@
             @foreach ($banners as $banner)
                 <div class="carousel-item">
                     <a href="{{ $banner->link }}">
-                        <img src="{{ file_exists('public/'.$banner->cover) && $banner->cover ? asset('public/' . $banner->cover) : asset('assets/images/favicon.png') }}" alt="Banner Image" />
+                        <img class="img-home" src="{{ file_exists('public/'.$banner->cover) && $banner->cover ? asset('public/' . $banner->cover) : asset('assets/images/favicon.png') }}" alt="Banner Image" />
                     </a>
                 </div>
             @endforeach
