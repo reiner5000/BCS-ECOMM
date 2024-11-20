@@ -49,6 +49,32 @@ class CheckoutController extends Controller
         Config::$is3ds = config('midtrans.is_3ds');
     }
 
+    public function checkTransactionStatus($orderId)
+    {   
+        try {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+    
+            $status = \Midtrans\Transaction::status($orderId);
+    
+            if ($status->transaction_status === 'settlement') {
+                // Update the order in the database
+                DB::table('orders')
+                    ->where('id', $orderId)
+                    ->update(['payment_id' => 1, 'updated_at' => now()]);
+    
+                \Log::info("Order $orderId marked as paid.");
+            }
+    
+            return response()->json($status);
+    
+        } catch (\Exception $e) {
+            \Log::error('Error fetching transaction status: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
     // public function createPayment(Request $request)
     // {
     //     // dd($request->all());
@@ -147,7 +173,9 @@ class CheckoutController extends Controller
         $date = Carbon::now()->format('Ymd'); 
         $countToday = Order::whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()])->count() + 1;
         $number = str_pad($countToday, 3, '0', STR_PAD_LEFT); 
-        $no_invoice = "INV/{$date}/{$number}"; 
+        $no_invoice = "INV/{$date}/{$number}";  
+
+       // dd($no_invoice);
         
         return $no_invoice; 
     }
@@ -261,7 +289,7 @@ class CheckoutController extends Controller
     //         ],
     //         'customer_details' => [
     //             'first_name' => auth()->guard('customer')->user()->name,
-    //             'email' => auth()->guard('customer')->user()->email,
+    //             'email' => aut'h()->guard('customer')->user()->email,
     //             'phone' => auth()->guard('customer')->user()->phone_number,  
     //         ],
     //         'billing_address' => [
@@ -321,73 +349,92 @@ class CheckoutController extends Controller
     }
 
     public function notification(Request $request)
-    {
-        try {
-            // Retrieve parameters from query string
-            $orderId = $request->query('order_id');
-            $status = $request->query('transaction_status');
-            $statusCode = $request->query('status_code');
-            $type = $request->query('payment_type'); // Assuming 'payment_type' is sent as a query parameter
+{
+    try {
+        $payload = $request->all();
 
-            // Log data for debugging
-            \Log::info('Midtrans notification data: ', $request->query());
+        \Log::info('Midtrans Notification Payload:', $payload);
 
-            // Find order based on orderId
-            $order = Order::where('id', $orderId)->first();
+        $orderId = $payload['order_id'] ?? null;
+        $transactionStatus = $payload['transaction_status'] ?? null;
+        $paymentType = $payload['payment_type'] ?? 'unknown';
+        $grossAmount = $payload['gross_amount'] ?? '0.00';
 
-            // find order item based on order id
-            $orderItem = OrderItem::where('order_id', $orderId)->get();
-
-            if ($order) {
-                // Update order status based on the transaction status
-                $this->updateOrderStatus($order, $status, $type);
-                if($status == 'settlement'){
-                    // from array orderItem hard delete cart by partitur_id
-                    foreach($orderItem as $item){
-                        Cart::where('merchandise_id', $item->merchandise_id)
-                                ->where('partiturdet_id', $item->partitur_id)
-                                ->where('customer_id', $order->customer_id)
-                                ->forceDelete();
-                    }
-                }
-            } else {
-                \Log::warning("Order with id $orderId not found.");
-                return response()->json('Order not found', 404);
-            }
-
-            return redirect()->route('checkout');
-        } catch (\Exception $e) {
-            \Log::error('Error processing Midtrans notification: ' . $e->getMessage());
-            return response()->json('Error processing request'.$e->getMessage(), 500);
+        if (!$orderId) {
+            \Log::warning('Missing order_id in notification');
+            return response()->json(['error' => 'Missing order_id'], 400);
         }
-    }
 
-    private function updateOrderStatus($order, $payment_id, $type)
-    {
-        switch ($payment_id) {
-            case 'capture': // for credit card transaction
-                if ($type == 'credit_card') {
-                    $order->payment_id = 1; // success
-                }
-                break;
+        $order = Order::where('id', $orderId)->first(); // Or use no_invoice if matching differently
+        if (!$order) {
+            \Log::warning("Order with ID $orderId not found.");
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        // Validate gross amount
+        if (bccomp($order->total, $grossAmount, 2) !== 0) {
+            \Log::warning("Gross amount mismatch for Order ID $orderId. Expected {$order->total}, received {$grossAmount}.");
+            return response()->json(['error' => 'Gross amount mismatch'], 400);
+        }
+
+        // Update order based on transaction status
+        switch ($transactionStatus) {
+            case 'capture':
             case 'settlement':
-                $order->payment_id = 1; // success
+                $order->payment_id = 1; // Paid
                 break;
+
             case 'pending':
-                $order->payment_id = 2; // pending
+                $order->payment_id = 2; // Pending
                 break;
+
             case 'deny':
-                $order->payment_id = 3; // denied
-                break;
             case 'expire':
-                $order->payment_id = 4; // expired
-                break;
             case 'cancel':
-                $order->payment_id = 5; // canceled
+                $order->payment_id = 5; // Failed
                 break;
         }
+
+        $order->payment_type = $paymentType; // Track payment type
         $order->save();
+
+        \Log::info("Order $orderId updated successfully with status $transactionStatus.");
+
+        return response()->json(['message' => 'Notification processed successfully'], 200);
+    } catch (\Exception $e) {
+        \Log::error('Error processing Midtrans notification: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
+
+
+    // private function updateOrderStatus($order, $payment_id, $type)
+    // {
+    //     switch ($payment_id) {
+    //         case 'capture': // for credit card transaction
+    //             if ($type == 'credit_card') {
+    //                 $order->payment_id = 1; // success
+    //             }
+    //             break;
+    //         case 'settlement':
+    //             $order->payment_id = 1; // success
+    //             break;
+    //         case 'pending':
+    //             $order->payment_id = 2; // pending
+    //             break;
+    //         case 'deny':
+    //             $order->payment_id = 3; // denied
+    //             break;
+    //         case 'expire':
+    //             $order->payment_id = 4; // expired
+    //             break;
+    //         case 'cancel':
+    //             $order->payment_id = 5; // canceled
+    //             break;
+    //     }
+    //     $order->save();
+    // }
 
 
 

@@ -31,7 +31,7 @@
                 <div class="tall-card">
                     <img class="card-banner {{ (file_exists(asset('public/'.$p->file_image_first))) ? 'contain-img-remove' : '' }}" src="{{ file_exists('public/'.$p->file_image_first) && $p->file_image_first != '' ? asset('public/'.$p->file_image_first) : asset('assets/images/favicon.png') }}" />
                     <div class="card-title">{{$p->name}}</div>
-                    <div class="card-more" onclick="window.location.href='{{ route('publisher.detail', ['name' => rawurlencode($p->name)]) }}'">View</div>
+                    <div class="card-more" onclick="window.location.href='{{ route('publisher.detail', ['name' => rawurlencode($p->name)]) }}?id={{$p->id}}'">View</div>
                 </div>
             @endforeach
         </div>

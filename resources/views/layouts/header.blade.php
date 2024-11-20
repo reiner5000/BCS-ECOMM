@@ -135,7 +135,9 @@
                 </optgroup>
                 <optgroup label="Sheet Music">
                     @foreach($partiturSearch as $c)
-                    <option value="sheetmusic-{{$c->id}}" <?php if(isset($type)) { ?> @if($type=="sheetmusic" && $c->id==$id) selected @endif <?php } ?>>{{$c->name}}</option>
+                    <option value="sheetmusic-{{$c->id}}" <?php if(isset($type)) { ?> @if($type=="sheetmusic" && $c->id==$id) selected @endif <?php } ?>>
+                        {{ $c->name }} @if($c->composer) - {{ $c->composer->name }} @endif
+                    </option>
                     @endforeach
                 </optgroup>
                 <optgroup label="Merchandise">

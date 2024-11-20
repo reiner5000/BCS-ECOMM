@@ -48,7 +48,7 @@
                         $images = explode(',', $partitur->file_image);
                         $mainImage = $images[0]; // Ambil gambar utama
                     @endphp
-                    <a class="tab-koleksi-link" href="{{ route('publisher.detail', ['name' => rawurlencode($partitur->name)]) }}">
+                    <a class="tab-koleksi-link" href="{{ route('publisher.detail', ['name' => rawurlencode($partitur->name)]) }}?id={{ $partitur->id }}">
                         <img {{ file_exists('public/' . $mainImage) && $mainImage ? '' : 'class=contain-img-remove' }} src="{{ file_exists('public/' . $mainImage) && $mainImage ? asset('public/' . $mainImage) : asset('assets/images/favicon.png') }}" alt="{{ $partitur->name }}" />
                         <div class="tab-koleksi-title">{{ $partitur->name }}</div>
                         <div class="tab-koleksi-sub"></div>

@@ -319,7 +319,13 @@
                             <div class="">Courier:</div>
                         </div>
                         <div class="text row justify-content-between">
-                            <div class="bold">POS Indonesia</div>
+                            <div class="bold">
+                                @if ($data->shipment_fee == 0)
+                                    -
+                                @else
+                                    POS Indonesia
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -340,7 +346,10 @@
 
         <div class="footer-info">
             <div class="text">This invoice is valid and processed by computer.</div>
-            <div class="text">Please contact [<b>BCS contact number</b>] if you need assistance.</div>
+            <div class="text">Please contact : <br>
+            <b>product@bandungchoral.com
+            <br>+62 813-9555-1613</b><br>
+            if you need assistance.</div>
         </div>
     </div>
 </body>

@@ -701,32 +701,100 @@
             return urlParams.get(name);
         }
         
+        // function fetchPartitur(page = 1) {
+        //     let details = {};
+        //     $('input.sheetmusic-checkbox:checked').each(function() {
+        //         let categoryId = $(this).data(
+        //             'category-id'); // Pastikan ini sesuai dengan data attribute pada checkbox
+        //         let detailId = $(this).val();
+        //         if (!details[categoryId]) {
+        //             details[categoryId] = [];
+        //         }
+        //         details[categoryId].push(detailId);
+        //     });
+
+        //     let dataToSend = {
+        //         page: page,
+        //         details: details,
+        //     };
+
+        //     let type = getQueryParameter('t');
+        //     let id = getQueryParameter('s');
+
+        //     if (type && id) {
+        //         dataToSend.type = type;
+        //         dataToSend.id = id;
+        //     }
+
+        //     // Iterasi setiap kategori untuk mengambil detail yang dipilih
+        //     $('input.sheetmusic-checkbox:checked').each(function() {
+        //         let name = $(this).attr('name');
+        //         let value = $(this).val();
+        //         if (!dataToSend[name]) {
+        //             dataToSend[name] = [];
+        //         }
+        //         dataToSend[name].push(value);
+        //     });
+        //     $.ajax({
+        //         url: '{{ route('fetch.partitur') }}', // Pastikan route ini sesuai dengan yang Anda definisikan di Laravel
+        //         data: dataToSend,
+        //         type: 'GET',
+        //         dataType: 'json',
+        //         success: function(response) {
+        //             let partiturs = response.data;
+
+        //             if (partiturs.length === 0) {
+        //                 $('.tab-container#partitur-tab .koleksi-container').html('<div class="no-data">No Data Found</div>');
+        //                 $('.tab-container#partitur-tab .hint-datatable-page').html('Showing 0 to 0 of 0 items');
+        //             } else {
+        //                 let html = '';
+        //                 $.each(partiturs, function(index, partitur) {
+        //                     let detailUrlTemplate = "{{ route('publisher.detail', ['name' => 'PLACEHOLDER']) }}";
+        //                     let encodedName = encodeURIComponent(partitur.name);
+        //                     let detailUrl = detailUrlTemplate.replace('PLACEHOLDER', encodedName);
+        //                     let imgUrl = partitur.file_image_first ? 'public/' + partitur.file_image_first :
+        //                         'assets/images/favicon.png';
+        //                     let classCover = partitur.file_image_first ? '' : 'class="contain-img-remove"';
+
+        //                     html += '<a class="tab-koleksi-link" href="' + detailUrl +
+        //                         '" data-target="' + partitur.id + '">' +
+        //                         '<img '+classCover+' src="' + imgUrl +
+        //                         '" onerror="this.onerror=null; this.src=\'assets/images/favicon.png\'" />' +
+        //                         '<div class="tab-koleksi-title">' + partitur.name + '</div>' +
+        //                         '<div class="tab-koleksi-sub"></div>' +
+        //                         '</a>';
+        //                 });
+        //                 $('.tab-container#partitur-tab .koleksi-container').html(html);
+        //                 updatePagination(response);
+        //             }
+        //         }
+        //     });
+        // }
+        
         function fetchPartitur(page = 1) {
             let details = {};
             $('input.sheetmusic-checkbox:checked').each(function() {
-                let categoryId = $(this).data(
-                    'category-id'); // Pastikan ini sesuai dengan data attribute pada checkbox
+                let categoryId = $(this).data('category-id');
                 let detailId = $(this).val();
                 if (!details[categoryId]) {
                     details[categoryId] = [];
                 }
                 details[categoryId].push(detailId);
             });
-
+        
             let dataToSend = {
                 page: page,
                 details: details,
             };
-
+        
             let type = getQueryParameter('t');
             let id = getQueryParameter('s');
-
+        
             if (type && id) {
                 dataToSend.type = type;
                 dataToSend.id = id;
             }
-
-            // Iterasi setiap kategori untuk mengambil detail yang dipilih
+        
             $('input.sheetmusic-checkbox:checked').each(function() {
                 let name = $(this).attr('name');
                 let value = $(this).val();
@@ -735,30 +803,30 @@
                 }
                 dataToSend[name].push(value);
             });
+        
             $.ajax({
-                url: '{{ route('fetch.partitur') }}', // Pastikan route ini sesuai dengan yang Anda definisikan di Laravel
+                url: '{{ route('fetch.partitur') }}',
                 data: dataToSend,
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
                     let partiturs = response.data;
-
+        
                     if (partiturs.length === 0) {
                         $('.tab-container#partitur-tab .koleksi-container').html('<div class="no-data">No Data Found</div>');
                         $('.tab-container#partitur-tab .hint-datatable-page').html('Showing 0 to 0 of 0 items');
                     } else {
                         let html = '';
                         $.each(partiturs, function(index, partitur) {
-                            let detailUrlTemplate = "{{ route('publisher.detail', ['name' => 'PLACEHOLDER']) }}";
+                            let detailUrlTemplate = "{{ route('publisher.detail', ['name' => 'PLACEHOLDER_NAME', 'id' => 'PLACEHOLDER_ID']) }}";
                             let encodedName = encodeURIComponent(partitur.name);
-                            let detailUrl = detailUrlTemplate.replace('PLACEHOLDER', encodedName);
-                            let imgUrl = partitur.file_image_first ? 'public/' + partitur.file_image_first :
-                                'assets/images/favicon.png';
+                            let detailUrl = detailUrlTemplate.replace('PLACEHOLDER_NAME', encodedName).replace('PLACEHOLDER_ID', partitur.id);
+                            let imgUrl = partitur.file_image_first ? 'public/' + partitur.file_image_first : 'assets/images/favicon.png';
                             let classCover = partitur.file_image_first ? '' : 'class="contain-img-remove"';
-
+        
                             html += '<a class="tab-koleksi-link" href="' + detailUrl +
                                 '" data-target="' + partitur.id + '">' +
-                                '<img '+classCover+' src="' + imgUrl +
+                                '<img ' + classCover + ' src="' + imgUrl +
                                 '" onerror="this.onerror=null; this.src=\'assets/images/favicon.png\'" />' +
                                 '<div class="tab-koleksi-title">' + partitur.name + '</div>' +
                                 '<div class="tab-koleksi-sub"></div>' +
@@ -770,6 +838,7 @@
                 }
             });
         }
+
 
         function fetchMerchandise(page = 1) {
             let details = {};

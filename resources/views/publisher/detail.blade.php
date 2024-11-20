@@ -154,90 +154,164 @@
     }
     
     function handleAddToCart(productId) {
-        // get total qty
-        let totalQty = 0;
-        let qtyKurang = 0;
-        for (let index = 0; index < productId.length; index++) {
-            totalQty += parseInt(document.getElementById('qty-' + productId[index]).value);
-            const inputQty = document.getElementById('qty-' + productId[index]);
-            const minQty = document.getElementById('min-' + productId[index]);
+    // get total qty
+    let totalQty = 0;
+    let qtyKurang = 0;
 
-            if(parseInt(inputQty.value) > 0 && parseInt(inputQty.value) < parseInt(minQty.value)){
+    for (let index = 0; index < productId.length; index++) {
+        const inputQty = document.getElementById('qty-' + productId[index]);
+        const minQty = document.getElementById('min-' + productId[index]);
+        const qtyValue = parseInt(inputQty.value);
+
+        if (qtyValue > 0) { // Hanya periksa partitur dengan qty lebih dari 0
+            totalQty += qtyValue;
+
+            if (qtyValue < parseInt(minQty.value)) {
                 qtyKurang++;
             }
         }
-        
-        if(qtyKurang > 0){
-            Swal.fire({
-                icon: 'error',
-                title: 'Qty Less Than Minimum Order',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        }else if(totalQty == 0){
-            // total qty kosong (pilih barang)
-            Swal.fire({
-                icon: 'error',
-                title: 'Select Items first',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        }else{
-            // const popuplengkapilogin = document.getElementById('lengkapi-login');
-            // popuplengkapilogin.classList.add('active');
-            for (let index = 0; index < productId.length; index++) {
-                const id = productId[index];
-                const qty = document.getElementById('qty-' + productId[index]).value;
-                const min = document.getElementById('min-' + productId[index]).value;
-                if(qty > 0){
-                    // Prepare data to be sent to the server
-                    let data = {
-                        productId: id,
-                        quantity: qty,
-                        // namapartitur: "{{ $partitur ? $partitur->name : '' }}",
-                        _token: "{{ csrf_token() }}" // Laravel CSRF token
-                    };
-                    if(!@json(Auth::guard('customer')->check())){
-                        const popuplengkapilogin = document.getElementById('lengkapi-login');
-                        popuplengkapilogin.classList.add('active');
-                    }else{
-                        // Make an AJAX request to your Laravel backend
-                        fetch("{{ route('add.to.cart') }}", {
-                                method: "POST",
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(data)
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log('Success:', data);
-                                if (data.status === 'login_required') {
-                                    // Show the login modal here
-                                    const popuplengkapilogin = document.getElementById('lengkapi-login');
-                                    popuplengkapilogin.classList.add('active');
-                                } else if (data.message === "Product added to cart successfully!") {
-                                    // Open the modal or show a success message
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: data.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    }).then(() => {
-                                        window.location.reload();
-                                    });
-                                    // document.getElementById("show-right-cart").click();
-                                }
-                            })
-                            .catch((error) => {
-                                console.error('Error:', error);
-                                // Handle error (for example, show an error message)
-                            });
+    }
+
+    if (qtyKurang > 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Qty Less Than Minimum Order',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } else if (totalQty == 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Select Items first',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } else {
+        for (let index = 0; index < productId.length; index++) {
+            const id = productId[index];
+            const qty = parseInt(document.getElementById('qty-' + id).value);
+
+            if (qty > 0) { // Hanya kirim data partitur dengan qty lebih dari 0
+                let data = {
+                    productId: id,
+                    quantity: qty,
+                    _token: "{{ csrf_token() }}"
+                };
+
+                fetch("{{ route('add.to.cart') }}", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === "Product added to cart successfully!") {
+                        Swal.fire({
+                            icon: 'success',
+                            title: data.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            window.location.reload();
+                        });
                     }
-                }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
             }
         }
     }
+}
+
+    
+    // function handleAddToCart(productId) {
+    //     // get total qty
+    //     let totalQty = 0;
+    //     let qtyKurang = 0;
+    //     for (let index = 0; index < productId.length; index++) {
+    //         totalQty += parseInt(document.getElementById('qty-' + productId[index]).value);
+    //         const inputQty = document.getElementById('qty-' + productId[index]);
+    //         const minQty = document.getElementById('min-' + productId[index]);
+
+    //         if(parseInt(inputQty.value) > 0 && parseInt(inputQty.value) < parseInt(minQty.value)){
+    //             qtyKurang++;
+    //         }
+    //     }
+        
+    //     if(qtyKurang > 0){
+    //         Swal.fire({
+    //             icon: 'error',
+    //             title: 'Qty Less Than Minimum Order',
+    //             showConfirmButton: false,
+    //             timer: 1500
+    //         });
+    //     }else if(totalQty == 0){
+    //         // total qty kosong (pilih barang)
+    //         Swal.fire({
+    //             icon: 'error',
+    //             title: 'Select Items first',
+    //             showConfirmButton: false,
+    //             timer: 1500
+    //         });
+    //     }else{
+    //         // const popuplengkapilogin = document.getElementById('lengkapi-login');
+    //         // popuplengkapilogin.classList.add('active');
+    //         for (let index = 0; index < productId.length; index++) {
+    //             const id = productId[index];
+    //             const qty = document.getElementById('qty-' + productId[index]).value;
+    //             const min = document.getElementById('min-' + productId[index]).value;
+    //             if(qty > 0){
+    //                 // Prepare data to be sent to the server
+    //                 let data = {
+    //                     productId: id,
+    //                     quantity: qty,
+    //                     // namapartitur: "{{ $partitur ? $partitur->name : '' }}",
+    //                     _token: "{{ csrf_token() }}" // Laravel CSRF token
+    //                 };
+    //                 if(!@json(Auth::guard('customer')->check())){
+    //                     const popuplengkapilogin = document.getElementById('lengkapi-login');
+    //                     popuplengkapilogin.classList.add('active');
+    //                 }else{
+    //                     // Make an AJAX request to your Laravel backend
+    //                     fetch("{{ route('add.to.cart') }}", {
+    //                             method: "POST",
+    //                             headers: {
+    //                                 'Content-Type': 'application/json',
+    //                             },
+    //                             body: JSON.stringify(data)
+    //                         })
+    //                         .then(response => response.json())
+    //                         .then(data => {
+    //                             console.log('Success:', data);
+    //                             if (data.status === 'login_required') {
+    //                                 // Show the login modal here
+    //                                 const popuplengkapilogin = document.getElementById('lengkapi-login');
+    //                                 popuplengkapilogin.classList.add('active');
+    //                             } else if (data.message === "Product added to cart successfully!") {
+    //                                 // Open the modal or show a success message
+    //                                 Swal.fire({
+    //                                     icon: 'success',
+    //                                     title: data.message,
+    //                                     showConfirmButton: false,
+    //                                     timer: 1500
+    //                                 }).then(() => {
+    //                                     window.location.reload();
+    //                                 });
+    //                                 // document.getElementById("show-right-cart").click();
+    //                             }
+    //                         })
+    //                         .catch((error) => {
+    //                             console.error('Error:', error);
+    //                             // Handle error (for example, show an error message)
+    //                         });
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     function hideLoginPopup() {
         document.getElementById('lengkapi-login').style.display = 'none';

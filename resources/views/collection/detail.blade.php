@@ -31,7 +31,7 @@
                         $images = explode(',', $partitur->file_image); // Pisahkan string menjadi array
                         $firstImage = $images[0] ?? asset('assets/images/favicon.png'); // Ambil gambar pertama, atau gunakan gambar default
                     @endphp
-                    <a class="tab-koleksi-link" href="{{ route('publisher.detail', ['name' => rawurlencode($partitur->name)]) }}">
+                    <a class="tab-koleksi-link" href="{{ route('publisher.detail', ['name' => rawurlencode($partitur->name)]) }}?id={{ $partitur->id }}">
                         <img {{ file_exists('public/' . $firstImage) && $firstImage ? '' : 'class=contain-img-remove' }} src="{{ file_exists('public/' . $firstImage) && $firstImage ? asset('public/' . $firstImage) : asset('assets/images/favicon.png') }}" alt="{{ $partitur->name }}" />
                         <div class="tab-koleksi-title">{{ $partitur->name }}</div>
                         <div class="tab-koleksi-sub"></div>

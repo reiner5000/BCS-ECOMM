@@ -34,9 +34,19 @@ class PublisherController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($name)
+    public function show($identifier, Request $request)
     {
-        $partitur = Partitur::with('details')->where('name',$name)->first();
+        // Mendapatkan parameter 'id' dari query string
+        $id = $request->query('id'); // Ambil ID dari query string, misalnya id=41
+        // Mengambil nama dari segmen URL yang tidak memiliki ID, misalnya Amazing Grace
+        $name = urldecode($identifier); // Mengambil nama dari URL dan mendekodekan URL encoding (contoh: "Amazing%20Grace")
+    
+        // Cari berdasarkan ID dan nama menggunakan operator 'AND'
+        $partitur = Partitur::with('details')
+                            ->where('id', $id)
+                            ->where('name', $name)
+                            ->first();
+                        
         $rekomendasi = Partitur::inRandomOrder()->limit(5)->get();
         if($partitur){
             return view('publisher.detail', compact('partitur','rekomendasi'));

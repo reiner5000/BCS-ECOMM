@@ -3,6 +3,32 @@
 <head>
     @include('layouts.import')
     <title>Bandung Choral Society | My Account</title>
+    <style>
+        .card-newtitle{
+            overflow: auto;
+        }
+
+        /* Untuk tampilan tablet dan HP (kurang dari atau sama dengan 1024px) */
+        @media (max-width: 1024px) {
+            .list-order{
+                flex-direction: column;
+                align-items: center;
+            }
+            .card-order{
+                width: 100% !important;
+                    align-items: center;
+            }
+            .card-detail-order{
+                width: 100% !important;
+                    align-items: center;
+            }
+            .card-detail-o{
+                width: 100%;
+                display: flex;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -160,33 +186,53 @@
             <div class="section-col w-100">
                 @foreach($order->where('payment_id',1) as $o)
                 <div class="history-card">
-                    <div class="col">
-                        <div class="row align-items-center gap-20">
-                            <div class="card-newtitle">Shopping</div>
-                            <div class="card-subtitle">{{\Carbon\Carbon::parse($o->date)->format('j M Y')}} {{$o->no_invoice}}</div>
-                            <div class="history-status @if($o->status == 2) success @elseif($o->status == 1) default @else warning @endif">@if($o->status == 2) Finished @elseif($o->status == 1) In delivery @else It's being packaged @endif</div>
+                    <div class="col w-100">
+                        <div class="row align-items-center gap-20" style="justify-content: space-between;">
+                            <div class="card-newtitle">{{$o->no_invoice}}</div>
+                            <div class="card-subtitle"></div>
+                            <div class="history-status 
+                                @if($o->status == 2) 
+                                    success 
+                                @elseif($o->status == 1) 
+                                    default 
+                                @else 
+                                    warning 
+                                @endif">
+                                    @if ($o->shipment_fee == 0)
+                                        Online Document
+                                    @elseif($o->status == 2) 
+                                        Finished 
+                                    @elseif($o->status == 1) 
+                                        In delivery 
+                                    @else 
+                                        It's being packaged 
+                                    @endif
+                            </div>
                             
                         </div>
+                        <hr>
 
-                        <div class="row gap-20">
+                        <div class="row gap-20 list-order">
                             <img class="history-img" src="{{ asset('assets/images/order.svg') }}" />
-                            <div class="col">
-                                <div class="card-title">{{\Carbon\Carbon::parse($o->date)->format('j M Y')}}</div>
+                            <div class="col w-50 card-order">
+                                <div class="card-title"> {{\Carbon\Carbon::parse($o->date)->format('j M Y')}}</div>
                                 <div class="card-muted">
                                     @foreach($o->items as $d)
                                     {{$d->quantity}} item x Rp {{number_format($d->total_harga/$d->quantity,0,',','.')}}<br>
                                     @endforeach
                                 </div>
                             </div>
+                            <div class="col w-50 h-100 justify-content-space-between card-detail-order">
+                            <div class="col align-items-end card-detail-o">
+                                <div class="card-title">Total Shopping</div>
+                                <div class="card-muted">Rp {{number_format(($o->total),0,',','.')}}</div>
+                                 <div class="button-red mt-m" style="text-align: center; width: 50%;" onclick="javascript:location.href='{{ route('order', ['id' => $o->id]) }}'">View Order Details</div>
+                            </div>
+                           
+                        </div>
                         </div>
                     </div>
-                    <div class="col h-100 justify-content-space-between">
-                        <div class="col align-items-end">
-                            <div class="card-title">Total Shopping</div>
-                            <div class="card-muted">Rp {{number_format(($o->total),0,',','.')}}</div>
-                        </div>
-                        <div class="button-red mt-m" onclick="javascript:location.href='{{ route('order', ['id' => $o->id]) }}'">View Order Details</div>
-                    </div>
+
                 </div>
                 <br>
                 @endforeach
@@ -233,6 +279,44 @@
             }
         });
     </script>
+
+<script>
+    // Function to get URL query parameters
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check for 'tab' query parameter
+        const tab = getQueryParam('tab');
+
+        if (tab === 'riwayat') {
+            // Activate the 'Order History' tab
+            document.querySelector('.tab-trigger[tab-target="riwayat-tab"]').classList.add('active');
+            document.querySelector('#riwayat-tab').classList.add('active');
+            
+            // Deactivate the 'My Profile' tab
+            document.querySelector('.tab-trigger[tab-target="biodata-tab"]').classList.remove('active');
+            document.querySelector('#biodata-tab').classList.remove('active');
+        }
+    });
+
+    // Event listener for tab clicks
+    document.querySelectorAll('.tab-trigger').forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            const target = this.getAttribute('tab-target');
+
+            // Remove 'active' class from all tabs
+            document.querySelectorAll('.tab-trigger').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-container').forEach(container => container.classList.remove('active'));
+
+            // Add 'active' class to the clicked tab and corresponding container
+            this.classList.add('active');
+            document.getElementById(target).classList.add('active');
+        });
+    });
+</script>
 </body>
 
 </html>

@@ -127,7 +127,9 @@
                         <div class="col align-items-end">
                             <div
                                 class="history-status @if ($data->status == 2) success @elseif($data->status == 1) default @else warning @endif">
-                                @if ($data->status == 2)
+                                @if ($data->shipment_fee == 0)
+                                    Online Document
+                                @elseif ($data->status == 2)
                                     Finished
                                 @elseif($data->status == 1)
                                     In delivery
